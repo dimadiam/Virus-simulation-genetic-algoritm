@@ -1,5 +1,3 @@
-//переписать брейн и вирус в класс
-//сделать округление населения
 class Country {
     constructor(name, temper, chanceInfection, population, day = 1, year = 1) {
         this.name = name;
