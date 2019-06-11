@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="wrapper">
+        <div class="col">
+            <div class="table js-table"></div>
+        </div>
+        <div class="col">
+            <form class="form js-form">
+                <div class="title">Virus settings</div>
+                <div class="input">
+                    <input class="js-input" type="number" min="-50" max="0" id="minTemp" placeholder=" " autofocus>
+                    <label for="minTemp">Min temperature (-50; 0)</label>
+                </div>
+                <div class="input">
+                    <input class="js-input" type="number" min="0" max="50" id="maxTemp" placeholder=" ">
+                    <label for="maxTemp">Max temperature (0; 50)</label>
+                </div>
+                <button class="js-apply">Apply</button>
+                <button class="js-start">Start</button>
+            </form>
+            <div class="form">
+                <div class="text">Virus population:</div>
+                <div class="text js-v-population">500</div>
+                <div class="text">Day infection:</div>
+                <div class="text js-day-infection">0</div>
+                <div class="text">Virus resultat:</div>
+                <div class="text js-virus-res">Before infection</div>
+            </div>
+        </div>
+    </div>
+    <!--<script src="arrCountries.js"></script>-->
+    <script src="utilities.js"></script>
+    <script src="virus.js"></script>
+    <script src="country.js"></script>
+    <script src="brainVirusPopulation.js"></script>
+    <script>
+        // interface
+        let btnApply = document.querySelector('.js-apply'),
+            btnStart = document.querySelector('.js-start'),
+            arrInput = document.querySelectorAll('.js-input'),
+            formWrap = document.querySelector('.js-form'),
+            wrTable  = document.querySelector('.js-table'),
+            
+            textVirusPopulation = document.querySelector('.js-v-population'),
+            textDayInfection = document.querySelector('.js-day-infection'),
+            textVirusResult = document.querySelector('.js-virus-res');
+        // for virus and countries
+        let options = {
+                min: -20,
+                max: 20
+            },
+            c = Country.create(),
+            countries = arrCountries,//.slice(0, 3),
+            vPopulation,
+            maxRepeat = 10,
+            isHealthyAllPeople = true,
+            infectedPeopleObj, allVirus,
+            tmpAllPeople = 0;
+
+        formWrap.addEventListener('submit', function(e) {
+            e.preventDefault(); // отмена обновления страницы по нажатию на кнопку в форме
+        }, false);
+        btnApply.addEventListener('click', function() {
+            // настройка вируса
+            let tmpMin = arrInput[0].value,
+                tmpMax = arrInput[1].value;
+            if(tmpMin.length > 0) {
+                tmpMin = parseInt(tmpMin);
+                if(tmpMin <= 0 && tmpMin >= -50) {
+                    options.min = tmpMin; // минимальная температура
+                } else {
+                    alert('Invalid temperature. Input number between -50 and 0.');
+                    arrInput[0].focus();
+                }
+            }
+            if(tmpMax.length > 0) {
+                if(tmpMax >= 0 && tmpMax <= 50) {
+                    options.min = tmpMax; // минимальная температура
+                } else {
+                    alert('Invalid temperature. Input number between 0 and 50.');
+                    arrInput[1].focus();
+                }
+            }
+
+        }, false);
+        btnStart.addEventListener('click', function() {
+            // запуск вируса
+            virusStart();
+        }, false);
+
+        
+
+        function virusStart() {
+            vPopulation = new BrainVirusPopulation(countries, rnd(1, countries.length), 2, 500, options);
+            vPopulation.calcChance(); // пересчёт шанса заражения вирусом, в зависимости от текущей страны
+            textVirusResult.innerText = 'Start infection!';
+            
+
+            let id = setInterval(function() {
+                if(!vPopulation.alive || !isHealthyAllPeople || !maxRepeat--) {
+                    clearInterval(id);
+                    console.warn('That`s all!');
+                    textVirusResult.innerText = 'That`s all!';
+                } else {
+                    isHealthyAllPeople = false;
+                    allVirus = vPopulation.get();
+                    vPopulation.show(tmpAllPeople);
+
+                    textVirusPopulation.innerText = formatNumber(tmpAllPeople);
+                    textDayInfection.innerText = countries[0].day;
+
+                    tmpAllPeople = 0;
+                    vPopulation.nextDay(countries[0].day);
+                    // инфицированные люди
+                    infectedPeopleObj = {};
+
+                    for(let v of allVirus) {
+                        if(v.country.name in infectedPeopleObj) infectedPeopleObj[ v.country.name ]++;
+                        else infectedPeopleObj[ v.country.name ] = 1;
+                    }
+                    for (let country of countries) {
+                        if(country.name in infectedPeopleObj) {
+                            country.setHealthy(infectedPeopleObj[country.name]);
+                        }
+                        country.checkDay( allVirus );
+                        country.show();
+                        tmpAllPeople += country.populationInfected;
+
+                        if(country.getHealthyPopulation() > 0) isHealthyAllPeople = true;   
+                    }
+                    refreshTable(wrTable, countries);
+                }
+            }, 100);
+        }
+
+
+        function refreshTable(wr, arr) {
+            wr.innerHTML = '';
+            wr.appendChild( createTr('Name', 'Population Healthy', 'Population Infected', 'Aver. Temperature', ' tr--bold') );
+            for (let i = 0; i < arr.length; i++) {
+                wr.appendChild( createTr(arr[i].name, formatNumber(arr[i].populationHealthy), formatNumber(arr[i].populationInfected), arr[i].todayTemp) );
+            }
+        }
+        function createTr(name, healthy, infected, temperature, addClassTr='') {
+            var tr  = document.createElement('div'),
+                td1 = document.createElement('div'),
+                td2 = document.createElement('div'),
+                td3 = document.createElement('div'),
+                td4 = document.createElement('div');
+            tr.className = 'tr' + addClassTr;
+            td1.className = 'td';
+            td2.className = 'td';
+            td3.className = 'td';
+            td4.className = 'td';
+
+            td1.innerText = name;
+            td2.innerText = healthy;
+            td3.innerText = infected;
+            td4.innerText = temperature;
+
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td3);
+            tr.appendChild(td4);
+
+            return tr;
+        }
+    </script>
+</body>
+</html>
