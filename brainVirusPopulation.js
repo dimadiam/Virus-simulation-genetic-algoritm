@@ -6,7 +6,7 @@ class BrainVirusPopulation {
         this.maxPopulation = maxPopulation;
         this.arrVirus = [];
         while (startPopulation--) {
-            this.arrVirus[startPopulation] = new Virus(70, 100, virusOptions.min, virusOptions.max, this.startCountry);//123
+            this.arrVirus[startPopulation] = new Virus(70, 100, virusOptions.min, virusOptions.max, this.startCountry);
         }
         this.alive = true;
     }
@@ -43,7 +43,7 @@ class BrainVirusPopulation {
         }
 
         if(this.arrVirus.length < 2) this.alive = false;
-        //123
+        
         if(day % rnd(1, 5) === 0) this.crossoverPopulation();
         if(day % rnd(1, 5) === 0) this.infectionCountry();
         if(day % rnd(1, 3) === 0) this.mutation(rnd(10, 20));
@@ -55,7 +55,8 @@ class BrainVirusPopulation {
         while(qty-- > 0) this.arrVirus[qty].calcChance();
     }
     _crossover(a, b) {
-        // одноточечное скрещивание -> берём случайное число k на промежутке от 0 и до длинны гена. Разбиваем ген в месте k и получаем 2 пары кусочков генов. Соединяем а1 с b2 и b1 с a2: получаем новых потомков.
+        //Одноточечное скрещивание -> берём случайное число k на промежутке от 0 и до длинны гена. 
+        //Разбиваем ген в месте k и получаем 2 пары кусочков генов. Соединяем а1 с b2 и b1 с a2: получаем новых потомков.
         var pair = [
             a.toString(2),
             b.toString(2)
@@ -83,7 +84,10 @@ class BrainVirusPopulation {
         }
     }
     crossoverPopulation() {
-        var qty = this.arrVirus.length, pair, i, j, qtyGens = this.arrVirus[0].gens.length, nameGen;
+        var qty = this.arrVirus.length, 
+            pair, i, j, 
+            qtyGens = this.arrVirus[0].gens.length, 
+            nameGen;
         qty = rnd(qty*0.2, qty*0.5);
         qty = qty%2 ? qty-1 : qty;
         for (i = 0; i < qty; i+=2) {
