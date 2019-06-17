@@ -1,5 +1,12 @@
 class Country {
-    constructor(name, temper, chanceInfection, population, day = 1, year = 1) {
+    constructor(name, temper, chanceInfection, population, seasonIntervals={}, day = 1, year = 1) {
+        this.seasons = {
+            spring: seasonIntervals.spring,
+            summer: seasonIntervals.summer,
+            fall: seasonIntervals.fall,
+            dayInYear: seasonIntervals.allDays
+        };
+
         this.name = name;
         this.temper = temper;
         this.chance = chanceInfection;
@@ -12,37 +19,22 @@ class Country {
         this.todayTemp = 0;
         this.k = parseInt(this.populationMax*0.0001*rnd(1,5));
     }
-    static create(name=null, population=null) {
-        name = name ? name : rndCountry(rnd(3, 15));
-        population = population ? population : rnd(872, 7230686);
-        return new Country(
-            name,
-            {
-                summer: [10, 30],
-                fall: [5, 20],
-                winter: [-20, 2],
-                spring: [0, 18]
-            },
-        rnd(20, 3000), population);
-        function rndCountry(length) {
-            var name = '';
-            while(length--) name += String.fromCharCode( rnd(65, 91) )
-            return name[0] + name.substr(1).toLowerCase();
-        }
-    }
     calcSeason() {
-        if(this.day > 365) {
-            this.day %= 366;
+        for(let k in this.seasons) {
+            if (this.day > this.seasons[k][0] && this.day <= this.seasons[k][1]) return k;
+        }
+        return 'winter';
+    }
+    calcYear() {
+        if(this.day > this.seasons.dayInYear) {
+            this.day %= this.seasons.dayInYear + 1;
             if(this.day === 1) this.year++;
             this.day++;
         }
-        if (this.day < 60 || this.day > 334) return 'winter';
-        if (this.day > 59 && this.day < 152) return 'spring';
-        if (this.day > 152 && this.day < 244) return 'summer';
-        return 'fall';
     }
     checkDay(arrVirus) {
         if (this.day%28 === 0) this.season = this.calcSeason();
+        if (this.day%365 === 0) this.calcYear();
         this.todayTemp = rnd(
             this.temper[this.season][0],
             this.temper[this.season][1]
@@ -54,7 +46,7 @@ class Country {
                     || this.todayTemp > arrVirus[qty].maxTemp) {
                         arrVirus[qty].dead();
                     }
-                // код заражения 123
+                // код заражения 
                 var tmpChance = rnd(0, 0);
                 if (this.populationHealthy - this.k > 0 && tmpChance < arrVirus[qty].chance) {
                     if(rnd(0, 1) === 1) {
@@ -84,7 +76,15 @@ class Country {
         console.log('\n\n');
      }
 }
-// for delete
+
+
+// countries
+let seasonIntervals = {
+    spring: [59, 152],
+    summer: [152, 244],
+    fall: [244, 303],
+    allDays: 365
+};
 
 let arrCountries = [
     new Country('Germany',
@@ -94,7 +94,7 @@ let arrCountries = [
     winter: [-6, 2],
     spring: [0, 15]
     },
-    40, 82438639),
+    40, 82438639, seasonIntervals),
     new Country('United Kingdom',
     {
     summer: [15, 27],
@@ -102,7 +102,7 @@ let arrCountries = [
     winter: [-8, 5],
     spring: [0, 15]
     },
-    30, 66959016),
+    30, 66959016, seasonIntervals),
     new Country('France',
     {
     summer: [15, 25],
@@ -110,7 +110,7 @@ let arrCountries = [
     winter: [-14, 2],
     spring: [0, 15]
     },
-    40, 65480710),
+    40, 65480710, seasonIntervals),
     new Country('Italy',
     {
     summer: [15, 26],
@@ -118,7 +118,7 @@ let arrCountries = [
     winter: [-8, 5],
     spring: [0, 16]
     },
-    30, 59216525),
+    30, 59216525, seasonIntervals),
     new Country('Spain',
     {
     summer: [16, 28],
@@ -126,7 +126,7 @@ let arrCountries = [
     winter: [-7, 5],
     spring: [0, 18]
     },
-    40, 46441049),
+    40, 46441049, seasonIntervals),
     new Country('Ukraine',
     {
     summer: [15, 30],
@@ -134,7 +134,7 @@ let arrCountries = [
     winter: [-20, -2],
     spring: [-2, 18]
     },
-    50, 43795220),
+    50, 43795220, seasonIntervals),
     new Country('Poland',
     {
     summer: [15, 25],
@@ -142,7 +142,7 @@ let arrCountries = [
     winter: [-17, -1],
     spring: [-1, 15]
     },
-    45, 38028278),
+    45, 38028278, seasonIntervals),
     new Country('Romania',
     {
     summer: [15, 28],
@@ -150,7 +150,7 @@ let arrCountries = [
     winter: [-13, 2],
     spring: [0, 17]
     },
-    55, 19483360),
+    55, 19483360, seasonIntervals),
     new Country('Netherlands',
     {
     summer: [14, 24],
@@ -158,7 +158,7 @@ let arrCountries = [
     winter: [-18, -1],
     spring: [0, 16]
     },
-    35, 17132908),
+    35, 17132908, seasonIntervals),
     new Country('Belgium',
     {
     summer: [14, 25],
@@ -166,7 +166,7 @@ let arrCountries = [
     winter: [-9, 4],
     spring: [0, 14]
     },
-    30, 11562784),
+    30, 11562784, seasonIntervals),
     new Country('Greece',
     {
     summer: [18, 35],
@@ -174,7 +174,7 @@ let arrCountries = [
     winter: [-7, 5],
     spring: [2, 20]
     },
-    40, 11124603),
+    40, 11124603, seasonIntervals),
     new Country('Czechia',
     {
     summer: [15, 28],
@@ -182,7 +182,7 @@ let arrCountries = [
     winter: [-10, 2],
     spring: [0, 12]
     },
-    50, 10630589),
+    50, 10630589, seasonIntervals),
     new Country('Portugal',
     {
     summer: [15, 33],
@@ -190,7 +190,7 @@ let arrCountries = [
     winter: [-8, 2],
     spring: [0, 18]
     },
-    45, 10254666),
+    45, 10254666, seasonIntervals),
     new Country('Sweden',
     {
     summer: [10, 20],
@@ -198,7 +198,7 @@ let arrCountries = [
     winter: [-25, -5],
     spring: [-2, 8]
     },
-    35, 10053135),
+    35, 10053135, seasonIntervals),
     new Country('Hungary',
     {
     summer: [10, 27],
@@ -206,7 +206,7 @@ let arrCountries = [
     winter: [-16, 0],
     spring: [0, 10]
     },
-    40, 9655361),
+    40, 9655361, seasonIntervals),
     new Country('Austria',
     {
     summer: [10, 25],
@@ -214,7 +214,7 @@ let arrCountries = [
     winter: [-7, 2],
     spring: [0, 10]
     },
-    38, 8766201),
+    38, 8766201, seasonIntervals),
     new Country('Bulgaria',
     {
     summer: [15, 35],
@@ -222,7 +222,7 @@ let arrCountries = [
     winter: [-10, 3],
     spring: [0, 15]
     },
-    46, 6988739),
+    46, 6988739, seasonIntervals),
     new Country('Denmark',
     {
     summer: [10, 26],
@@ -230,7 +230,7 @@ let arrCountries = [
     winter: [-10, 2],
     spring: [0, 14]
     },
-    38, 5775224),
+    38, 5775224, seasonIntervals),
     new Country('Finland',
     {
     summer: [10, 19],
@@ -238,7 +238,7 @@ let arrCountries = [
     winter: [-27, -3],
     spring: [-5, 8]
     },
-    35, 5561389),
+    35, 5561389, seasonIntervals),
     new Country('Slovakia',
     {
     summer: [10, 27],
@@ -246,7 +246,7 @@ let arrCountries = [
     winter: [-12, 0],
     spring: [0, 10]
     },
-    40, 5450987),
+    40, 5450987, seasonIntervals),
     new Country('Ireland',
     {
     summer: [10, 26],
@@ -254,7 +254,7 @@ let arrCountries = [
     winter: [-12, 2],
     spring: [-1, 10]
     },
-    40, 4847139),
+    40, 4847139, seasonIntervals),
     new Country('Croatia',
     {
     summer: [10, 27],
@@ -262,7 +262,7 @@ let arrCountries = [
     winter: [-16, 0],
     spring: [0, 10]
     },
-    39, 4140148),
+    39, 4140148, seasonIntervals),
     new Country('Lithuania',
     {
     summer: [15, 27],
@@ -270,7 +270,7 @@ let arrCountries = [
     winter: [-12, 0],
     spring: [0, 14]
     },
-    36, 2864459),
+    36, 2864459, seasonIntervals),
     new Country('Slovenia',
     {
     summer: [16, 27],
@@ -278,7 +278,7 @@ let arrCountries = [
     winter: [-12, 0],
     spring: [0, 13]
     },
-    48, 2081900),
+    48, 2081900, seasonIntervals),
     new Country('Latvia',
     {
     summer: [16, 25],
@@ -286,7 +286,7 @@ let arrCountries = [
     winter: [-12, 0],
     spring: [0, 11]
     },
-    40, 1911108),
+    40, 1911108, seasonIntervals),
     new Country('Estonia',
     {
     summer: [17, 27],
@@ -294,7 +294,7 @@ let arrCountries = [
     winter: [-16, 0],
     spring: [0, 15]
     },
-    48, 1303798),
+    48, 1303798, seasonIntervals),
     new Country('Malta',
     {
     summer: [16, 30],
@@ -302,7 +302,7 @@ let arrCountries = [
     winter: [-8, 2],
     spring: [0, 16]
     },
-    40, 433245),
+    40, 433245, seasonIntervals),
     new Country('Iceland',
     {
     summer: [10, 20],
@@ -310,5 +310,5 @@ let arrCountries = [
     winter: [-22, -2],
     spring: [0, 10]
     },
-    40, 340566)
+    40, 340566, seasonIntervals)
   ];
